@@ -63,12 +63,12 @@ class EnhancedUNet(nn.Module):
         self.unet = smp.Unet(
             encoder_name=encoder_name,
             encoder_weights=encoder_weights,
-            in_channels=1,
+            in_channels=1, 
             classes=classes,
             activation=None
         )
-        # Assuming a fixed input size for creating the model
-        sample_input = torch.randn(1, 1, 256, 256) 
+        # Use the correct sample input size from your training script
+        sample_input = torch.randn(1, 1, 128, 128) 
         with torch.no_grad():
             encoder_features = self.unet.encoder(sample_input)
         
@@ -84,8 +84,8 @@ class EnhancedUNet(nn.Module):
         attn = self.cbam(context)
         modified_features_list = list(features)
         modified_features_list[-2] = attn
-        # Unpack the list of features with '*'
-        decoder_out = self.unet.decoder(*modified_features_list)
+        # Pass the list directly to the decoder
+        decoder_out = self.unet.decoder(modified_features_list)
         seg = self.unet.segmentation_head(decoder_out)
         return seg
 
