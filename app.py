@@ -93,8 +93,8 @@ class EnhancedUNet(nn.Module):
 @st.cache_resource
 def load_model():
     model = EnhancedUNet().to(device)
-    checkpoint = torch.load("best_model.pth", map_location=device)
-    model.load_state_dict(checkpoint['model_state_dict'])
+    state_dict = torch.load("best_model.pth", map_location=device)
+    model.load_state_dict(state_dict)
     model.eval()
     return model
 
