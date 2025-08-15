@@ -183,12 +183,18 @@ st.markdown(
 
 st.markdown(
     """
+    SUPERVISED BY  
+
+    DR. MAAME GYAMFUA ASANTE-MENSAH - gasante-mensah@ucc.edu.gh
+
     **Project Team Members:**  
     - Fortune Semanu — akusikafortune77@gmail.com  
     - Prince Tetteh — princedoetetteh2001@gmail.com  
     - Dennis Sarfo Boateng — dennissarfo75@gmail.com  
     - Deborah Yankson Mensah — mensahdebbie690@gmail.com 
     - Godson Odei-Danso — godsondanso@gmail.com (Team Leader)
+
+    
 
     *Final Year Project, Department of Computer Science and Information Technology, University of Cape Coast, 2025*
     """
