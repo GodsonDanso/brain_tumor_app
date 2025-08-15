@@ -116,6 +116,7 @@ def load_model():
     model = EnhancedUNet().to(device)
     checkpoint = torch.load("best_model.pth", map_location=device)
 
+    # Ensure correct loading from checkpoint dict
     if "model_state_dict" in checkpoint:
         model.load_state_dict(checkpoint["model_state_dict"])
     else:
@@ -157,14 +158,15 @@ uploaded_file = st.file_uploader("Choose an MRI image...", type=["png", "jpg", "
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file)
-    st.image(image, caption="Uploaded MRI Image", use_container_width=True)
+    st.image(image, caption="Uploaded MRI Image", use_container_width=True)  # updated param
 
     model = load_model()
 
     with st.spinner("Processing image..."):
         predicted_mask = predict(model, image)
 
-    st.image(predicted_mask, caption="Predicted Tumor Mask", use_container_width=True)
+    st.image(predicted_mask, caption="Predicted Tumor Mask", use_container_width=True)  # updated param
+
 
 # --------------------------------------------------------
 # Disclaimer & Team Info
@@ -191,3 +193,5 @@ st.markdown(
     *Final Year Project, Department of Computer Science and Information Technology, University of Cape Coast, 2025*
     """
 )
+
+
