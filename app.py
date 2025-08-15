@@ -9,10 +9,14 @@ from albumentations.pytorch import ToTensorV2
 import cv2
 import os
 
-# Define the device for model inference
+# --------------------------------------------------------
+# Device setup
+# --------------------------------------------------------
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# --- Model Architecture Classes (from training.docx) ---
+# --------------------------------------------------------
+# CBAM Attention Block
+# --------------------------------------------------------
 class CBAMBlock(nn.Module):
     def __init__(self, channels, reduction=16):
         super(CBAMBlock, self).__init__()
@@ -39,6 +43,9 @@ class CBAMBlock(nn.Module):
         spatial_att = self.spatial(torch.cat([avg_out, max_out], dim=1))
         return x * spatial_att
 
+# --------------------------------------------------------
+# Atrous Spatial Pyramid Pooling (ASPP)
+# --------------------------------------------------------
 class ASPP(nn.Module):
     def __init__(self, in_channels, out_channels):
         super(ASPP, self).__init__()
@@ -57,89 +64,107 @@ class ASPP(nn.Module):
         output = self.out_conv(x_cat)
         return output
 
+# --------------------------------------------------------
+# Enhanced U-Net with CBAM and ASPP
+# --------------------------------------------------------
 class EnhancedUNet(nn.Module):
     def __init__(self, encoder_name='resnet34', encoder_weights='imagenet', classes=1):
         super(EnhancedUNet, self).__init__()
         self.unet = smp.Unet(
             encoder_name=encoder_name,
             encoder_weights=encoder_weights,
-            in_channels=1, 
+            in_channels=1,  # Grayscale MRI
             classes=classes,
             activation=None
         )
-        # Use the correct sample input size from your training script
-        sample_input = torch.randn(1, 1, 128, 128) 
+
+        # Get ASPP input channels from encoder output
+        sample_input = torch.randn(1, 1, 128, 128)
         with torch.no_grad():
             encoder_features = self.unet.encoder(sample_input)
-        
-        # Get the number of channels for the ASPP/CBAM input
+
+        if len(encoder_features) < 2:
+            raise ValueError(
+                f"Encoder returned only {len(encoder_features)} features. Expected at least 2."
+            )
+
         aspp_in_channels = encoder_features[-2].shape[1]
         self.cbam = CBAMBlock(aspp_in_channels)
         self.aspp = ASPP(aspp_in_channels, aspp_in_channels)
 
     def forward(self, x):
         features = self.unet.encoder(x)
+        if len(features) < 2:
+            raise ValueError(
+                f"Encoder returned only {len(features)} features. Cannot access features[-2]."
+            )
+
         feature_for_aspp = features[-2]
         context = self.aspp(feature_for_aspp)
         attn = self.cbam(context)
+
         modified_features_list = list(features)
         modified_features_list[-2] = attn
-        # Pass the list directly to the decoder
+
         decoder_out = self.unet.decoder(modified_features_list)
         seg = self.unet.segmentation_head(decoder_out)
         return seg
 
-# Use st.cache_resource to load the model only once
+# --------------------------------------------------------
+# Load model once with caching
+# --------------------------------------------------------
 @st.cache_resource
 def load_model():
     model = EnhancedUNet().to(device)
-    state_dict = torch.load("best_model.pth", map_location=device)
-    model.load_state_dict(state_dict)
+    checkpoint = torch.load("best_model.pth", map_location=device)
+
+    # Ensure correct loading from checkpoint dict
+    if "model_state_dict" in checkpoint:
+        model.load_state_dict(checkpoint["model_state_dict"])
+    else:
+        model.load_state_dict(checkpoint)
+
     model.eval()
     return model
 
-# Define the preprocessing transformation
+# --------------------------------------------------------
+# Preprocessing (same as validation in training)
+# --------------------------------------------------------
 preprocess_transform = A.Compose([
     A.Normalize(mean=(0.5,), std=(0.25,)),
     ToTensorV2()
 ])
 
+# --------------------------------------------------------
+# Prediction function
+# --------------------------------------------------------
 def predict(model, image):
-    # Ensure the image is in grayscale (L) and convert to a numpy array
     image_np = np.array(image.convert("L"))
-    
-    # Apply the same preprocessing as in the training script
     augmented = preprocess_transform(image=image_np)
-    input_tensor = augmented['image'].unsqueeze(0).to(device)
-    
-    # Get the prediction from the model
+    input_tensor = augmented["image"].unsqueeze(0).to(device)
+
     with torch.no_grad():
         output = model(input_tensor)
-    
-    # Apply sigmoid to get probabilities and create a binary mask
+
     sigmoid_output = torch.sigmoid(output).squeeze().cpu().numpy()
     pred_mask = (sigmoid_output > 0.5).astype(np.uint8) * 255
-    
     return pred_mask
 
-# --- Streamlit UI ---
+# --------------------------------------------------------
+# Streamlit UI
+# --------------------------------------------------------
 st.title("Brain Tumor Segmentation App")
 st.write("Upload an MRI scan to get the predicted tumor segmentation mask.")
 
-# File uploader widget
 uploaded_file = st.file_uploader("Choose an MRI image...", type=["png", "jpg", "jpeg"])
 
 if uploaded_file is not None:
-    # Display the uploaded image
     image = Image.open(uploaded_file)
     st.image(image, caption="Uploaded MRI Image", use_column_width=True)
 
-    # Load the model
     model = load_model()
 
-    # Run prediction
     with st.spinner("Processing image..."):
         predicted_mask = predict(model, image)
-    
-    # Display the predicted mask
+
     st.image(predicted_mask, caption="Predicted Tumor Mask", use_column_width=True)
