@@ -6,8 +6,6 @@ import numpy as np
 from PIL import Image
 import albumentations as A
 from albumentations.pytorch import ToTensorV2
-import cv2
-import os
 
 # --------------------------------------------------------
 # Device setup
@@ -160,11 +158,11 @@ uploaded_file = st.file_uploader("Choose an MRI image...", type=["png", "jpg", "
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file)
-    st.image(image, caption="Uploaded MRI Image", use_column_width=True)
+    st.image(image, caption="Uploaded MRI Image", use_container_width=True)  # updated param
 
     model = load_model()
 
     with st.spinner("Processing image..."):
         predicted_mask = predict(model, image)
 
-    st.image(predicted_mask, caption="Predicted Tumor Mask", use_column_width=True)
+    st.image(predicted_mask, caption="Predicted Tumor Mask", use_container_width=True)  # updated param
