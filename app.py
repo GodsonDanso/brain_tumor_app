@@ -116,7 +116,6 @@ def load_model():
     model = EnhancedUNet().to(device)
     checkpoint = torch.load("best_model.pth", map_location=device)
 
-    # Ensure correct loading from checkpoint dict
     if "model_state_dict" in checkpoint:
         model.load_state_dict(checkpoint["model_state_dict"])
     else:
@@ -158,11 +157,37 @@ uploaded_file = st.file_uploader("Choose an MRI image...", type=["png", "jpg", "
 
 if uploaded_file is not None:
     image = Image.open(uploaded_file)
-    st.image(image, caption="Uploaded MRI Image", use_container_width=True)  # updated param
+    st.image(image, caption="Uploaded MRI Image", use_container_width=True)
 
     model = load_model()
 
     with st.spinner("Processing image..."):
         predicted_mask = predict(model, image)
 
-    st.image(predicted_mask, caption="Predicted Tumor Mask", use_container_width=True)  # updated param
+    st.image(predicted_mask, caption="Predicted Tumor Mask", use_container_width=True)
+
+# --------------------------------------------------------
+# Disclaimer & Team Info
+# --------------------------------------------------------
+st.markdown("---")
+st.markdown(
+    """
+    ⚠ **Disclaimer:**  
+    This application is developed for academic purposes only as part of a university final year project.  
+    It is **not** a certified medical device and **must not** be used for clinical diagnosis or treatment.  
+    Always consult qualified medical professionals for health-related decisions.
+    """
+)
+
+st.markdown(
+    """
+    **Project Team Members:**  
+    - Fortune Semanu — akusikafortune77@gmail.com  
+    - Prince Tetteh — princedoetetteh2001@gmail.com  
+    - Dennis Sarfo Boateng — dennissarfo75@gmail.com  
+    - Deborah Yankson Mensah — mensahdebbie690@gmail.com 
+    - Godson Odei-Danso — godsondanso@gmail.com (Team Leader)
+
+    *Final Year Project, Department of Computer Science and Information Technology, University of Cape Coast, 2025*
+    """
+)
