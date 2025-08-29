@@ -175,7 +175,7 @@ st.markdown("---")
 st.markdown(
     """
     ⚠ **Disclaimer:**  
-    This application is developed for academic purposes only as part of a university final year project.  
+    This application is developed for academic purposes only  
     It is **not** a certified medical device and **must not** be used for clinical diagnosis or treatment.  
     Always consult qualified medical professionals for health-related decisions.
     """
@@ -183,20 +183,10 @@ st.markdown(
 
 st.markdown(
     """
-    SUPERVISED BY  
-
-    DR. MAAME GYAMFUA ASANTE-MENSAH - gasante-mensah@ucc.edu.gh
-
-    **Project Team Members:**  
-    - Fortune Semanu — akusikafortune77@gmail.com  
-    - Prince Tetteh — princedoetetteh2001@gmail.com  
-    - Dennis Sarfo Boateng — dennissarfo75@gmail.com  
-    - Deborah Yankson Mensah — mensahdebbie690@gmail.com 
-    - Godson Odei-Danso — godsondanso@gmail.com (Team Leader)
-
+        - PRINCE TETTEH  — princedoetetteh2001@gmail.com 
+        - GODSON ODEI-DANSO — godsondanso@gmailcom
     
-
-    *Final Year Project, Department of Computer Science and Information Technology, University of Cape Coast, 2025*
+   
     """
 )
 
